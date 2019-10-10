@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 
 module rob(
     input clk,
@@ -49,19 +50,20 @@ module rob(
     logic [3:0] validCommitTime;
     logic [3:0] exceptionCommitTime;
     logic full_reg;
+    logic [6:0] full_count;
+    logic [2:0] insert_amount;
 
     assign full = full_reg;
-    assign tail_next = (full_reg) ? tail:(tail + (({1'b0, inserted} + 1) >> 1));
-    assign sum_head = {2'b0, head};
-    assign sum_tail = {2'b0, tail} + 4;
-    assign full_reg = (sum_tail - 1) >= sum_head;
+    assign insert_amount = (full_reg) ? 0:({2'b0, inserted[0]} + {2'b0, inserted[1]} + {2'b0, inserted[2]} + {2'b0, inserted[3]});
+    assign tail_next = (full_reg) ? tail:(tail + insert_amount);
+    assign full_reg = (full_count > 125);
     assign flushbit = (flushInst) ? 1'b0 : Q[flushIndex][0];
     assign exceptionbit = (exception) ? 1'b1 : Q[exceptionIndex][1];
     assign executedCommitTime = {Q[head+3][2], Q[head+2][2], Q[head+1][2], Q[head+0][2]};
     assign validCommitTime = {Q[head+3][0], Q[head+2][0], Q[head+1][0], Q[head+0][0]};
     assign exceptionCommitTime = {Q[head+3][1], Q[head+2][1], Q[head+1][1], Q[head+0][1]};
 
-    assign inserted_0_reg = (full_reg) ? Q[tail+0]:{archReg0, physReg0, opcode0, 1'b0, 1'b0, 1'b1}; 
+    assign inserted_0_reg = (full_reg) ? Q[tail]:{archReg0, physReg0, opcode0, 1'b0, 1'b0, 1'b1}; 
     assign inserted_1_reg = (full_reg) ? Q[tail+1]:{archReg1, physReg1, opcode1, 1'b0, 1'b0, 1'b1}; 
     assign inserted_2_reg = (full_reg) ? Q[tail+2]:{archReg2, physReg2, opcode2, 1'b0, 1'b0, 1'b1};      
     assign inserted_3_reg = (full_reg) ? Q[tail+3]:{archReg3, physReg3, opcode3, 1'b0, 1'b0, 1'b1}; 
@@ -73,7 +75,7 @@ module rob(
     
     //Commit engine 
     always_comb begin
-        unique case (executedCommitTime)
+        casex (executedCommitTime)
             4'bxxx0:begin
             head_next = head + 0;
             numCommited = 0;
@@ -104,14 +106,16 @@ module rob(
 
 
 
-    always_ff @ (posedge clk, negedge reset) begin
+    always_ff @ (posedge clk) begin
         if(~reset) begin
            Q <= {27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 
                 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0}; 
            head <= 0;
            tail <= 0;
+           full_count <= 0;
         end
         else begin
+            full_count <= full_count + insert_amount - numCommited;
             //insertion
             Q[tail+0] <= inserted_0_reg;
             Q[tail+1] <= inserted_1_reg;
