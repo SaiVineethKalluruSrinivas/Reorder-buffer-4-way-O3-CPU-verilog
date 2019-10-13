@@ -208,3 +208,238 @@ end
 end
 
 endmodule: iq
+
+module iq_tb;
+    parameter  ClockDelay = 10;
+                    
+
+ logic clk,
+ logic reset,
+ logic [3:0] inserted;
+ logic [6:0] robIdx0;
+ logic [7:0] srcReg0_1;
+ logic [7:0] srcReg0_2; 
+  logic [6:0] robIdx1;
+  logic [7:0] srcReg1_1;
+  logic [7:0] srcReg1_2;
+  logic [6:0] robIdx2;
+  logic [7:0] srcReg2_1;
+ logic [7:0] srcReg2_2;
+ logic [6:0] robIdx3;
+ logic [7:0] srcReg3_1;
+ logic [7:0] srcReg3_2;
+ logic executed;
+ logic [7:0] executedReg;
+ logic [2:0] numIssued;
+ logic [6:0] issued0;
+ logic [6:0] issued1;
+ logic [6:0] issued2;
+ logic [6:0] issued3;
+ logic full;
+
+    iq DUT (clk, reset, inserted, robIdx0, srcReg0_1, srcReg0_2, robIdx1, srcReg1_1, srcReg1_2, robIdx2, srcReg2_1, srcReg2_2, robIdx3, srcReg3_1, srcReg3_2,
+        executed, executedReg, numIssued, issued0, issued1, issued2, issued3);
+
+	initial begin // Set up the clock
+		clk <= 0;
+		forever #(ClockDelay/2) clk <= ~clk;
+	end
+
+    
+    initial
+    begin
+
+        // Reset ports
+        reset <= 0;
+        inserted <= 4'b0;
+        archReg0 <= 5'b0;
+        physReg0 <= 8'b0;
+        opcode0 <= 11'b0;
+        archReg1 <= 5'b0;
+        physReg1 <= 8'b0;
+        opcode1 <= 11'b0;
+        archReg2 <= 5'b0;
+        physReg2 <= 8'b0;
+        opcode2 <= 11'b0;
+        archReg3 <= 5'b0;
+        physReg3 <= 8'b0;
+        opcode3 <= 11'b0;
+        flushInst <= 1'b0;
+        flushIndex <= 7'b0;
+        exception <= 1'b0;
+        exceptionIndex <= 7'b0;
+        executed <= 4'b0;
+        executedIndex0 <= 7'b0;
+        executedIndex1 <= 7'b0;
+        executedIndex2 <= 7'b0;
+        executedIndex3 <= 7'b0;
+        @(posedge clk);
+        @(posedge clk);
+        reset <= 1;
+        @(posedge clk);
+        // Test insertion
+        inserted <= 4'b0001;
+        archReg0 <= 5'd0;
+        physReg0 <= 8'd0;
+        opcode0 <= 11'd1;
+        archReg1 <= 5'd0;
+        physReg1 <= 8'd0;
+        opcode1 <= 11'd2;
+        archReg2 <= 5'd0;
+        physReg2 <= 8'd0;
+        opcode2 <= 11'd3;
+        archReg3 <= 5'd0;
+        physReg3 <= 8'd0;
+        opcode3 <= 11'd4;
+        @(posedge clk);
+        inserted <= 4'b0011;
+        @(posedge clk);
+        inserted <= 4'b0111;
+        @(posedge clk);
+        inserted <= 4'b1111;
+        @(posedge clk);
+        inserted <= 4'b0000;
+        inserted <= 4'b0;
+        archReg0 <= 5'b0;
+        physReg0 <= 8'b0;
+        opcode0 <= 11'b0;
+        archReg1 <= 5'b0;
+        physReg1 <= 8'b0;
+        opcode1 <= 11'b0;
+        archReg2 <= 5'b0;
+        physReg2 <= 8'b0;
+        opcode2 <= 11'b0;
+        archReg3 <= 5'b0;
+        physReg3 <= 8'b0;
+        opcode3 <= 11'b0;
+        @(posedge clk);
+        // Test flush and exception
+        flushIndex <= 7'd4;
+        flushInst <= 1;
+        exception <= 1;
+        exceptionIndex <= 7'd5;
+        @(posedge clk);
+        flushInst <= 0;
+        exception <= 0;
+        @(posedge clk);
+        // Test executed on non-commited and commited entry
+        executed <= 4'b1111;
+        executedIndex0 <= 7'd7;
+        executedIndex1 <= 7'd8;
+        executedIndex2 <= 7'd9;
+        executedIndex3 <= 7'd6;
+        @(posedge clk);
+        executed <= 4'b0101;
+        executedIndex0 <= 7'd4;
+        executedIndex2 <= 7'd5;
+        @(posedge clk);
+        executed <= 4'b1111;
+        executedIndex0 <= 7'd0;
+        executedIndex1 <= 7'd1;
+        executedIndex2 <= 7'd2;
+        executedIndex3 <= 7'd3;
+        @(posedge clk);
+        executed <= 4'b0;
+        @(posedge clk);
+        inserted <= 4'b1111;
+        archReg0 <= 5'd0;
+        physReg0 <= 8'd0;
+        opcode0 <= 11'd1;
+        archReg1 <= 5'd0;
+        physReg1 <= 8'd0;
+        opcode1 <= 11'd2;
+        archReg2 <= 5'd0;
+        physReg2 <= 8'd0;
+        opcode2 <= 11'd3;
+        archReg3 <= 5'd0;
+        physReg3 <= 8'd0;
+        opcode3 <= 11'd4;
+        @(posedge clk);
+        // Insertion and Execution same time
+        inserted <= 4'b1111;
+        executed <= 4'b1111;
+        executedIndex0 <= 7'd10;
+        executedIndex1 <= 7'd11;
+        executedIndex2 <= 7'd12;
+        executedIndex3 <= 7'd13;
+        @(posedge clk);
+        // Filling the ROB
+        executed <= 4'b0;
+        inserted <= 4'b1111;
+        @(posedge clk);
+        inserted <= 4'b1111;
+        @(posedge clk);
+        inserted <= 4'b1111;
+        @(posedge clk);
+        inserted <= 4'b1111;
+        @(posedge clk);
+        inserted <= 4'b1111;
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        // Escape from Full
+        executed <= 4'b1111;
+        executedIndex0 <= 7'd14;
+        executedIndex1 <= 7'd15;
+        executedIndex2 <= 7'd16;
+        executedIndex3 <= 7'd17;
+        @(posedge clk);
+        // Enter full again
+        executed <= 4'b0;
+        inserted <= 4'b1111;
+        archReg0 <= 5'd0;
+        physReg0 <= 8'd0;
+        opcode0 <= 11'd1;
+        archReg1 <= 5'd0;
+        physReg1 <= 8'd0;
+        opcode1 <= 11'd2;
+        archReg2 <= 5'd0;
+        physReg2 <= 8'd0;
+        opcode2 <= 11'd3;
+        archReg3 <= 5'd0;
+        physReg3 <= 8'd0;
+        opcode3 <= 11'd4;
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        $display ("FINISHED!!!!!!!!!!!!!!!!!!!");
+        $finish;
+    end
+
+    
+
+endmodule
