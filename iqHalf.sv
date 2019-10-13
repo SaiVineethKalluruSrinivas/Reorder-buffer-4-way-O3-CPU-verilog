@@ -1,5 +1,13 @@
 `timescale 1ns / 1ps
-
+/*
+* Author: Sai Vineeth Kalluru Srinivas, Jiachen Zou
+* 16 Entries low-reset Issue Queue with Issue/insert width of 4
+* Utilize a queue that does simple see-and-issue policy, which always
+* seach for the first ready entry from the begin of the queue
+* IQ entry: 7-bit ROB index, two 8-bit destination physical register numbers 
+* (one for each source), two ready bits (one for each source), and
+* a valid bit. 
+*/
 module iq (
  input clk,
  input reset,
@@ -80,7 +88,7 @@ for(int i = 0; i <16; i++) begin
             executedReg2[i] = iq[i][1];
         end
         ready_mask[0][i] = ((iq[i][2:1] == 2'b11) && iq[i][0]) ? 1'b1 : 1'b0;
-        free_mask[0][15-i] = (iq[i][0]) ? 1'b0:1'b1; // Finding free mask
+        free_mask[0][i] = (iq[i][0]) ? 1'b0:1'b1; // Finding free mask
 end
 end
 
@@ -113,19 +121,19 @@ end
 
 always_comb begin
     leastOneIndexMaskInsert[0] = (free_mask[0]) ? (((free_mask[0] - 1) ^ free_mask[0] ) >> 1) : 16'b0;
-    four_index_array_insert[0] = (free_mask[0]) ? (5'd15 - ({4'b0,leastOneIndexMaskInsert[0][0]} + {4'b0,leastOneIndexMaskInsert[0][1]} + {4'b0,leastOneIndexMaskInsert[0][2]} + {4'b0,leastOneIndexMaskInsert[0][3]} + {4'b0,leastOneIndexMaskInsert[0][4]} + {4'b0,leastOneIndexMaskInsert[0][5]} + {4'b0,leastOneIndexMaskInsert[0][6]} + {4'b0,leastOneIndexMaskInsert[0][7]} + {4'b0,leastOneIndexMaskInsert[0][8]} + {4'b0,leastOneIndexMaskInsert[0][9]} + {4'b0,leastOneIndexMaskInsert[0][10]} + {4'b0,leastOneIndexMaskInsert[0][11]} + {4'b0,leastOneIndexMaskInsert[0][12]} + {4'b0,leastOneIndexMaskInsert[0][13]} + {4'b0,leastOneIndexMaskInsert[0][14]} + {4'b0,leastOneIndexMaskInsert[0][15]})):5'd31;
+    four_index_array_insert[0] = (free_mask[0]) ? (({4'b0,leastOneIndexMaskInsert[0][0]} + {4'b0,leastOneIndexMaskInsert[0][1]} + {4'b0,leastOneIndexMaskInsert[0][2]} + {4'b0,leastOneIndexMaskInsert[0][3]} + {4'b0,leastOneIndexMaskInsert[0][4]} + {4'b0,leastOneIndexMaskInsert[0][5]} + {4'b0,leastOneIndexMaskInsert[0][6]} + {4'b0,leastOneIndexMaskInsert[0][7]} + {4'b0,leastOneIndexMaskInsert[0][8]} + {4'b0,leastOneIndexMaskInsert[0][9]} + {4'b0,leastOneIndexMaskInsert[0][10]} + {4'b0,leastOneIndexMaskInsert[0][11]} + {4'b0,leastOneIndexMaskInsert[0][12]} + {4'b0,leastOneIndexMaskInsert[0][13]} + {4'b0,leastOneIndexMaskInsert[0][14]} + {4'b0,leastOneIndexMaskInsert[0][15]})):5'd31;
     free_mask[1] = free_mask[0] & (~(leastOneIndexMaskInsert[0] + 1));
 
     leastOneIndexMaskInsert[1] = (free_mask[1]) ? (((free_mask[1] - 1) ^ free_mask[1] ) >> 1) : 16'b0;
-    four_index_array_insert[1] = (free_mask[1]) ? (5'd15 - ({4'b0,leastOneIndexMaskInsert[1][0]} + {4'b0,leastOneIndexMaskInsert[1][1]} + {4'b0,leastOneIndexMaskInsert[1][2]} + {4'b0,leastOneIndexMaskInsert[1][3]} + {4'b0,leastOneIndexMaskInsert[1][4]} + {4'b0,leastOneIndexMaskInsert[1][5]} + {4'b0,leastOneIndexMaskInsert[1][6]} + {4'b0,leastOneIndexMaskInsert[1][7]} + {4'b0,leastOneIndexMaskInsert[1][8]} + {4'b0,leastOneIndexMaskInsert[1][9]} + {4'b0,leastOneIndexMaskInsert[1][10]} + {4'b0,leastOneIndexMaskInsert[1][11]} + {4'b0,leastOneIndexMaskInsert[1][12]} + {4'b0,leastOneIndexMaskInsert[1][13]} + {4'b0,leastOneIndexMaskInsert[1][14]} + {4'b0,leastOneIndexMaskInsert[1][15]})):5'd31;
+    four_index_array_insert[1] = (free_mask[1]) ? (({4'b0,leastOneIndexMaskInsert[1][0]} + {4'b0,leastOneIndexMaskInsert[1][1]} + {4'b0,leastOneIndexMaskInsert[1][2]} + {4'b0,leastOneIndexMaskInsert[1][3]} + {4'b0,leastOneIndexMaskInsert[1][4]} + {4'b0,leastOneIndexMaskInsert[1][5]} + {4'b0,leastOneIndexMaskInsert[1][6]} + {4'b0,leastOneIndexMaskInsert[1][7]} + {4'b0,leastOneIndexMaskInsert[1][8]} + {4'b0,leastOneIndexMaskInsert[1][9]} + {4'b0,leastOneIndexMaskInsert[1][10]} + {4'b0,leastOneIndexMaskInsert[1][11]} + {4'b0,leastOneIndexMaskInsert[1][12]} + {4'b0,leastOneIndexMaskInsert[1][13]} + {4'b0,leastOneIndexMaskInsert[1][14]} + {4'b0,leastOneIndexMaskInsert[1][15]})):5'd31;
     free_mask[2] = free_mask[1] & (~(leastOneIndexMaskInsert[1] + 1));
 
     leastOneIndexMaskInsert[2] = (free_mask[2]) ? (((free_mask[2] - 1) ^ free_mask[2] ) >> 1) : 16'b0;
-    four_index_array_insert[2] = (free_mask[2]) ? (5'd15 - ({4'b0,leastOneIndexMaskInsert[2][0]} + {4'b0,leastOneIndexMaskInsert[2][1]} + {4'b0,leastOneIndexMaskInsert[2][2]} + {4'b0,leastOneIndexMaskInsert[2][3]} + {4'b0,leastOneIndexMaskInsert[2][4]} + {4'b0,leastOneIndexMaskInsert[2][5]} + {4'b0,leastOneIndexMaskInsert[2][6]} + {4'b0,leastOneIndexMaskInsert[2][7]} + {4'b0,leastOneIndexMaskInsert[2][8]} + {4'b0,leastOneIndexMaskInsert[2][9]} + {4'b0,leastOneIndexMaskInsert[2][10]} + {4'b0,leastOneIndexMaskInsert[2][11]} + {4'b0,leastOneIndexMaskInsert[2][12]} + {4'b0,leastOneIndexMaskInsert[2][13]} + {4'b0,leastOneIndexMaskInsert[2][14]} + {4'b0,leastOneIndexMaskInsert[2][15]})):5'd31;
+    four_index_array_insert[2] = (free_mask[2]) ? (({4'b0,leastOneIndexMaskInsert[2][0]} + {4'b0,leastOneIndexMaskInsert[2][1]} + {4'b0,leastOneIndexMaskInsert[2][2]} + {4'b0,leastOneIndexMaskInsert[2][3]} + {4'b0,leastOneIndexMaskInsert[2][4]} + {4'b0,leastOneIndexMaskInsert[2][5]} + {4'b0,leastOneIndexMaskInsert[2][6]} + {4'b0,leastOneIndexMaskInsert[2][7]} + {4'b0,leastOneIndexMaskInsert[2][8]} + {4'b0,leastOneIndexMaskInsert[2][9]} + {4'b0,leastOneIndexMaskInsert[2][10]} + {4'b0,leastOneIndexMaskInsert[2][11]} + {4'b0,leastOneIndexMaskInsert[2][12]} + {4'b0,leastOneIndexMaskInsert[2][13]} + {4'b0,leastOneIndexMaskInsert[2][14]} + {4'b0,leastOneIndexMaskInsert[2][15]})):5'd31;
     free_mask[3] = free_mask[2] & (~(leastOneIndexMaskInsert[2] + 1));
 
     leastOneIndexMaskInsert[3] = (free_mask[3]) ? (((free_mask[3] - 1) ^ free_mask[3] ) >> 1) : 16'b0;
-    four_index_array_insert[3] = (free_mask[3]) ? (5'd15 - ({4'b0,leastOneIndexMaskInsert[3][0]} + {4'b0,leastOneIndexMaskInsert[3][1]} + {4'b0,leastOneIndexMaskInsert[3][2]} + {4'b0,leastOneIndexMaskInsert[3][3]} + {4'b0,leastOneIndexMaskInsert[3][4]} + {4'b0,leastOneIndexMaskInsert[3][5]} + {4'b0,leastOneIndexMaskInsert[3][6]} + {4'b0,leastOneIndexMaskInsert[3][7]} + {4'b0,leastOneIndexMaskInsert[3][8]} + {4'b0,leastOneIndexMaskInsert[3][9]} + {4'b0,leastOneIndexMaskInsert[3][10]} + {4'b0,leastOneIndexMaskInsert[3][11]} + {4'b0,leastOneIndexMaskInsert[3][12]} + {4'b0,leastOneIndexMaskInsert[3][13]} + {4'b0,leastOneIndexMaskInsert[3][14]} + {4'b0,leastOneIndexMaskInsert[3][15]})):5'd31;
+    four_index_array_insert[3] = (free_mask[3]) ? (({4'b0,leastOneIndexMaskInsert[3][0]} + {4'b0,leastOneIndexMaskInsert[3][1]} + {4'b0,leastOneIndexMaskInsert[3][2]} + {4'b0,leastOneIndexMaskInsert[3][3]} + {4'b0,leastOneIndexMaskInsert[3][4]} + {4'b0,leastOneIndexMaskInsert[3][5]} + {4'b0,leastOneIndexMaskInsert[3][6]} + {4'b0,leastOneIndexMaskInsert[3][7]} + {4'b0,leastOneIndexMaskInsert[3][8]} + {4'b0,leastOneIndexMaskInsert[3][9]} + {4'b0,leastOneIndexMaskInsert[3][10]} + {4'b0,leastOneIndexMaskInsert[3][11]} + {4'b0,leastOneIndexMaskInsert[3][12]} + {4'b0,leastOneIndexMaskInsert[3][13]} + {4'b0,leastOneIndexMaskInsert[3][14]} + {4'b0,leastOneIndexMaskInsert[3][15]})):5'd31;
 end
 
 always_comb begin

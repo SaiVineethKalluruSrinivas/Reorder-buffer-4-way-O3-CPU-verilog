@@ -1,5 +1,12 @@
 `timescale 1ns / 1ps
-
+/*
+* Author: Sai Vineeth Kalluru Srinivas, Jiachen Zou
+* 64 Entries low-reset Re-order Buffer with commit/insert width of 4
+* Utilize a circular queue with head and tail FIFO, tail is out, head is in
+* ROB entry: a 5-bit destination architectural  register number, 
+* an 8-bit destination physical register number, an 11-bit opcode, a valid
+* bit, an executed bit, and an exception bit
+*/
 module rob(
     input clk,
     input reset,

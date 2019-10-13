@@ -1,5 +1,11 @@
+/*
+* Author: Sai Vineeth Kalluru Srinivas, Jiachen Zou
+*
+* ROB Testbench
+* 
+* NOTE: Actual testbench is below the rob module, called rob_tb 
+*/
 `timescale 1ns / 1ps
-
 module rob(
     input clk,
     input reset,
@@ -54,26 +60,37 @@ module rob(
     logic [2:0] insert_amount;
 
     assign full = full_reg;
+    //calculating number of insts to be inserted in this cycle
     assign insert_amount = (full_reg) ? 0:({2'b0, inserted[0]} + {2'b0, inserted[1]} + {2'b0, inserted[2]} + {2'b0, inserted[3]});
+    //storing the new value for tail after insertion
     assign tail_next = (full_reg) ? tail:(tail + insert_amount);
+    //checking for full (if counter > 125) because only less than insts would be possible to insert otherwise
     assign full_reg = (full_count > 125);
+    //setting valid bit for inst to be flushed
     assign flushbit = (flushInst) ? 1'b0 : Q[flushIndex][0];
+    //setting exeception bit for inst with exeception
     assign exceptionbit = (exception) ? 1'b1 : Q[exceptionIndex][1];
+    //creating masks for executed bits, valid bits and commit bits for 4 insts from the head of queue
     assign executedCommitTime = {Q[head+3][2], Q[head+2][2], Q[head+1][2], Q[head+0][2]};
     assign validCommitTime = {Q[head+3][0], Q[head+2][0], Q[head+1][0], Q[head+0][0]};
     assign exceptionCommitTime = {Q[head+3][1], Q[head+2][1], Q[head+1][1], Q[head+0][1]};
 
+    //creating temporary wires assigned to incoming inserted regs (not assigning them into rob yet)
     assign inserted_0_reg = (full_reg) ? Q[tail]:{archReg0, physReg0, opcode0, 1'b0, 1'b0, 1'b1}; 
     assign inserted_1_reg = (full_reg) ? Q[tail+1]:{archReg1, physReg1, opcode1, 1'b0, 1'b0, 1'b1}; 
     assign inserted_2_reg = (full_reg) ? Q[tail+2]:{archReg2, physReg2, opcode2, 1'b0, 1'b0, 1'b1};      
     assign inserted_3_reg = (full_reg) ? Q[tail+3]:{archReg3, physReg3, opcode3, 1'b0, 1'b0, 1'b1}; 
 
+    //creating executed bits for instructions that have executed
     assign executed_0_reg = (executed[0]) ? 1'b1 : Q[executedIndex0][2];
     assign executed_1_reg = (executed[1]) ? 1'b1 : Q[executedIndex1][2];    
     assign executed_2_reg = (executed[2]) ? 1'b1 : Q[executedIndex2][2];
     assign executed_3_reg = (executed[3]) ? 1'b1 : Q[executedIndex3][2];
     
-    //Commit engine 
+    //Combination module checks for different execution cases possible for 4 insts from head
+    //Inst is popped if it is executed and head is incremented to 1
+    //While popping inst is also checked if it is valid without exception -> then num committed variable is incremented
+    //the case statement was designed to ensure that insts do not pop as soon as a executed zero bit (a.k.a not executed inst) is encountered while checking 4 isnts from head
     always_comb begin
         casex (executedCommitTime)
             4'bxxx0:begin
@@ -105,39 +122,52 @@ module rob(
     end
 
 
-
+    //The main clock module which sets the right value at positive edge of the clock
     always_ff @ (posedge clk) begin
         if(~reset) begin
+            //initializing ROB on reset
            Q <= {27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 
                 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0, 27'b0 ,27'b0 ,27'b0, 27'b0}; 
+           //Head is initialized to zero, as popping happens from head
            head <= 0;
+           //tail is initialized to zero, as insts are added from index 0
            tail <= 0;
+           //full_count keeps track of total insts in queue, it is set to 0 on reset.
            full_count <= 0;
         end
         else begin
+            //total insts in queue = num_of_insts calculated before cycle + num_inserted in this cycle - num_commited in this cycle
             full_count <= full_count + insert_amount - numCommited;
-            //insertion
+            //inserting temporary values from tail to tail+3;
             Q[tail+0] <= inserted_0_reg;
             Q[tail+1] <= inserted_1_reg;
             Q[tail+2] <= inserted_2_reg;
             Q[tail+3] <= inserted_3_reg;
+            //assigning new tail to next cycle
             tail <= tail_next;   
-            //flush
+            //assigning flush bit to inst to be flushed
             Q[flushIndex][0] <= flushbit;
-            //exception
+            //assigning exception bit to exception causing inst;
             Q[exceptionIndex][1] <= exceptionbit;
-            //execution
+            //assigning executed bit to indices that have been executed
             Q[executedIndex0][2] <= executed_0_reg;
             Q[executedIndex1][2] <= executed_1_reg;
             Q[executedIndex2][2] <= executed_2_reg;
             Q[executedIndex3][2] <= executed_3_reg;
-            //commit 
+            //assigning new value of head, after popping insts
             head <= head_next;
         end
     end
 
 endmodule : rob
 
+/*
+ROB Testbench
+Testbench is supposed to be used with GUI and waveform viewer
+Created as waveform simulation debug codes, not monitoring
+
+Cover Cases inclding insertion, commiting, flushing, execeptioning, executing, full check
+*/
 module rob_tb;
 
     parameter  ClockDelay = 10;
@@ -212,7 +242,7 @@ module rob_tb;
         @(posedge clk);
         reset <= 1;
         @(posedge clk);
-        // Test insertion
+        // Test insertion from 1 insert to 4 insert
         inserted <= 4'b0001;
         archReg0 <= 5'd0;
         physReg0 <= 8'd0;
@@ -257,23 +287,27 @@ module rob_tb;
         flushInst <= 0;
         exception <= 0;
         @(posedge clk);
-        // Test executed on non-commited and commited entry
+        // Test executed on non-commited(flushed/exceptioned) and commited entry
+        // WIll not commit, since it is at the tail
         executed <= 4'b1111;
         executedIndex0 <= 7'd7;
         executedIndex1 <= 7'd8;
         executedIndex2 <= 7'd9;
         executedIndex3 <= 7'd6;
         @(posedge clk);
+        // Executed on flushed/exceptioned entry
         executed <= 4'b0101;
         executedIndex0 <= 7'd4;
         executedIndex2 <= 7'd5;
         @(posedge clk);
+        // executed at the head, start commiting
         executed <= 4'b1111;
         executedIndex0 <= 7'd0;
         executedIndex1 <= 7'd1;
         executedIndex2 <= 7'd2;
         executedIndex3 <= 7'd3;
         @(posedge clk);
+        // All entry will be poped, but 4 and 5 will not commit due to flushed/exceptioned
         executed <= 4'b0;
         @(posedge clk);
         inserted <= 4'b1111;
