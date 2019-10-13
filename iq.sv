@@ -48,9 +48,9 @@ logic [25:0] iq_n [31:0];
 logic [31:0] ready_mask [3:0];
 logic [5:0] four_index_array [3:0];
 logic [31:0] leastOneIndexMask [3:0];
-logic [2:0] shift_amount [31:0];
 logic [3:0] is_valid_removed;
 logic [6:0] issued_rob [3:0];
+logic [3:0] empty_array_check;
 
 //execution wire logic
 logic [31:0] executedReg1;
@@ -87,19 +87,19 @@ end
 // Issuing
 // Creating 4 issuing index array
 always_comb begin
-    leastOneIndexMask[0] = (ready_mask[0]) ? (((ready_mask[0] - 1) ^ ready_mask[0] ) >> 1) : 31'b0;
+    leastOneIndexMask[0] = (ready_mask[0]) ? (((ready_mask[0] - 1) ^ ready_mask[0] ) >> 1) : 32'b0;
     four_index_array[0] = (ready_mask[0]) ? ({5'b0,leastOneIndexMask[0][0]} + {5'b0,leastOneIndexMask[0][1]} + {5'b0,leastOneIndexMask[0][2]} + {5'b0,leastOneIndexMask[0][3]} + {5'b0,leastOneIndexMask[0][4]} + {5'b0,leastOneIndexMask[0][5]} + {5'b0,leastOneIndexMask[0][6]} + {5'b0,leastOneIndexMask[0][7]} + {5'b0,leastOneIndexMask[0][8]} + {5'b0,leastOneIndexMask[0][9]} + {5'b0,leastOneIndexMask[0][10]} + {5'b0,leastOneIndexMask[0][11]} + {5'b0,leastOneIndexMask[0][12]} + {5'b0,leastOneIndexMask[0][13]} + {5'b0,leastOneIndexMask[0][14]} + {5'b0,leastOneIndexMask[0][15]} + {5'b0,leastOneIndexMask[0][16]} + {5'b0,leastOneIndexMask[0][17]} + {5'b0,leastOneIndexMask[0][18]} + {5'b0,leastOneIndexMask[0][19]} + {5'b0,leastOneIndexMask[0][20]} + {5'b0,leastOneIndexMask[0][21]} + {5'b0,leastOneIndexMask[0][22]} + {5'b0,leastOneIndexMask[0][23]} + {5'b0,leastOneIndexMask[0][24]} + {5'b0,leastOneIndexMask[0][25]} + {5'b0,leastOneIndexMask[0][26]} + {5'b0,leastOneIndexMask[0][27]} + {5'b0,leastOneIndexMask[0][28]} + {5'b0,leastOneIndexMask[0][29]} + {5'b0,leastOneIndexMask[0][30]} + {5'b0,leastOneIndexMask[0][31]}):6'd63;
     ready_mask[1] = ready_mask[0] & (~(leastOneIndexMask[0] + 1));
 
-    leastOneIndexMask[1] = (ready_mask[1]) ? (((ready_mask[1] - 1) ^ ready_mask[1] ) >> 1) : 31'b0;
+    leastOneIndexMask[1] = (ready_mask[1]) ? (((ready_mask[1] - 1) ^ ready_mask[1] ) >> 1) : 32'b0;
     four_index_array[1] = (ready_mask[1]) ? ({5'b0,leastOneIndexMask[1][0]} + {5'b0,leastOneIndexMask[1][1]} + {5'b0,leastOneIndexMask[1][2]} + {5'b0,leastOneIndexMask[1][3]} + {5'b0,leastOneIndexMask[1][4]} + {5'b0,leastOneIndexMask[1][5]} + {5'b0,leastOneIndexMask[1][6]} + {5'b0,leastOneIndexMask[1][7]} + {5'b0,leastOneIndexMask[1][8]} + {5'b0,leastOneIndexMask[1][9]} + {5'b0,leastOneIndexMask[1][10]} + {5'b0,leastOneIndexMask[1][11]} + {5'b0,leastOneIndexMask[1][12]} + {5'b0,leastOneIndexMask[1][13]} + {5'b0,leastOneIndexMask[1][14]} + {5'b0,leastOneIndexMask[1][15]} + {5'b0,leastOneIndexMask[1][16]} + {5'b0,leastOneIndexMask[1][17]} + {5'b0,leastOneIndexMask[1][18]} + {5'b0,leastOneIndexMask[1][19]} + {5'b0,leastOneIndexMask[1][20]} + {5'b0,leastOneIndexMask[1][21]} + {5'b0,leastOneIndexMask[1][22]} + {5'b0,leastOneIndexMask[1][23]} + {5'b0,leastOneIndexMask[1][24]} + {5'b0,leastOneIndexMask[1][25]} + {5'b0,leastOneIndexMask[1][26]} + {5'b0,leastOneIndexMask[1][27]} + {5'b0,leastOneIndexMask[1][28]} + {5'b0,leastOneIndexMask[1][29]} + {5'b0,leastOneIndexMask[1][30]} + {5'b0,leastOneIndexMask[1][31]}):6'd63;
     ready_mask[2] = ready_mask[1] & (~(leastOneIndexMask[1] + 1));
 
-    leastOneIndexMask[2] = (ready_mask[2]) ? (((ready_mask[2] - 1) ^ ready_mask[2] ) >> 1) : 31'b0;
+    leastOneIndexMask[2] = (ready_mask[2]) ? (((ready_mask[2] - 1) ^ ready_mask[2] ) >> 1) : 32'b0;
     four_index_array[2] = (ready_mask[2]) ? ({5'b0,leastOneIndexMask[2][0]} + {5'b0,leastOneIndexMask[2][1]} + {5'b0,leastOneIndexMask[2][2]} + {5'b0,leastOneIndexMask[2][3]} + {5'b0,leastOneIndexMask[2][4]} + {5'b0,leastOneIndexMask[2][5]} + {5'b0,leastOneIndexMask[2][6]} + {5'b0,leastOneIndexMask[2][7]} + {5'b0,leastOneIndexMask[2][8]} + {5'b0,leastOneIndexMask[2][9]} + {5'b0,leastOneIndexMask[2][10]} + {5'b0,leastOneIndexMask[2][11]} + {5'b0,leastOneIndexMask[2][12]} + {5'b0,leastOneIndexMask[2][13]} + {5'b0,leastOneIndexMask[2][14]} + {5'b0,leastOneIndexMask[2][15]} + {5'b0,leastOneIndexMask[2][16]} + {5'b0,leastOneIndexMask[2][17]} + {5'b0,leastOneIndexMask[2][18]} + {5'b0,leastOneIndexMask[2][19]} + {5'b0,leastOneIndexMask[2][20]} + {5'b0,leastOneIndexMask[2][21]} + {5'b0,leastOneIndexMask[2][22]} + {5'b0,leastOneIndexMask[2][23]} + {5'b0,leastOneIndexMask[2][24]} + {5'b0,leastOneIndexMask[2][25]} + {5'b0,leastOneIndexMask[2][26]} + {5'b0,leastOneIndexMask[2][27]} + {5'b0,leastOneIndexMask[2][28]} + {5'b0,leastOneIndexMask[2][29]} + {5'b0,leastOneIndexMask[2][30]} + {5'b0,leastOneIndexMask[2][31]}):6'd63;
     ready_mask[3] = ready_mask[2] & (~(leastOneIndexMask[2] + 1));
 
-    leastOneIndexMask[3] = (ready_mask[3]) ? (((ready_mask[3] - 1) ^ ready_mask[3] ) >> 1) : 31'b0;
+    leastOneIndexMask[3] = (ready_mask[3]) ? (((ready_mask[3] - 1) ^ ready_mask[3] ) >> 1) : 32'b0;
     four_index_array[3] = (ready_mask[3]) ? ({5'b0,leastOneIndexMask[3][0]} + {5'b0,leastOneIndexMask[3][1]} + {5'b0,leastOneIndexMask[3][2]} + {5'b0,leastOneIndexMask[3][3]} + {5'b0,leastOneIndexMask[3][4]} + {5'b0,leastOneIndexMask[3][5]} + {5'b0,leastOneIndexMask[3][6]} + {5'b0,leastOneIndexMask[3][7]} + {5'b0,leastOneIndexMask[3][8]} + {5'b0,leastOneIndexMask[3][9]} + {5'b0,leastOneIndexMask[3][10]} + {5'b0,leastOneIndexMask[3][11]} + {5'b0,leastOneIndexMask[3][12]} + {5'b0,leastOneIndexMask[3][13]} + {5'b0,leastOneIndexMask[3][14]} + {5'b0,leastOneIndexMask[3][15]} + {5'b0,leastOneIndexMask[3][16]} + {5'b0,leastOneIndexMask[3][17]} + {5'b0,leastOneIndexMask[3][18]} + {5'b0,leastOneIndexMask[3][19]} + {5'b0,leastOneIndexMask[3][20]} + {5'b0,leastOneIndexMask[3][21]} + {5'b0,leastOneIndexMask[3][22]} + {5'b0,leastOneIndexMask[3][23]} + {5'b0,leastOneIndexMask[3][24]} + {5'b0,leastOneIndexMask[3][25]} + {5'b0,leastOneIndexMask[3][26]} + {5'b0,leastOneIndexMask[3][27]} + {5'b0,leastOneIndexMask[3][28]} + {5'b0,leastOneIndexMask[3][29]} + {5'b0,leastOneIndexMask[3][30]} + {5'b0,leastOneIndexMask[3][31]}):6'd63;
 
 end
@@ -112,19 +112,19 @@ end
 end
 
 always_comb begin
-    leastOneIndexMaskInsert[0] = (free_mask[0]) ? (((free_mask[0] - 1) ^ free_mask[0] ) >> 1) : 31'b0;
+    leastOneIndexMaskInsert[0] = (free_mask[0]) ? (((free_mask[0] - 1) ^ free_mask[0] ) >> 1) : 32'b0;
     four_index_array_insert[0] = (free_mask[0]) ? (6'd31 - ({5'b0,leastOneIndexMaskInsert[0][0]} + {5'b0,leastOneIndexMaskInsert[0][1]} + {5'b0,leastOneIndexMaskInsert[0][2]} + {5'b0,leastOneIndexMaskInsert[0][3]} + {5'b0,leastOneIndexMaskInsert[0][4]} + {5'b0,leastOneIndexMaskInsert[0][5]} + {5'b0,leastOneIndexMaskInsert[0][6]} + {5'b0,leastOneIndexMaskInsert[0][7]} + {5'b0,leastOneIndexMaskInsert[0][8]} + {5'b0,leastOneIndexMaskInsert[0][9]} + {5'b0,leastOneIndexMaskInsert[0][10]} + {5'b0,leastOneIndexMaskInsert[0][11]} + {5'b0,leastOneIndexMaskInsert[0][12]} + {5'b0,leastOneIndexMaskInsert[0][13]} + {5'b0,leastOneIndexMaskInsert[0][14]} + {5'b0,leastOneIndexMaskInsert[0][15]} + {5'b0,leastOneIndexMaskInsert[0][16]} + {5'b0,leastOneIndexMaskInsert[0][17]} + {5'b0,leastOneIndexMaskInsert[0][18]} + {5'b0,leastOneIndexMaskInsert[0][19]} + {5'b0,leastOneIndexMaskInsert[0][20]} + {5'b0,leastOneIndexMaskInsert[0][21]} + {5'b0,leastOneIndexMaskInsert[0][22]} + {5'b0,leastOneIndexMaskInsert[0][23]} + {5'b0,leastOneIndexMaskInsert[0][24]} + {5'b0,leastOneIndexMaskInsert[0][25]} + {5'b0,leastOneIndexMaskInsert[0][26]} + {5'b0,leastOneIndexMaskInsert[0][27]} + {5'b0,leastOneIndexMaskInsert[0][28]} + {5'b0,leastOneIndexMaskInsert[0][29]} + {5'b0,leastOneIndexMaskInsert[0][30]} + {5'b0,leastOneIndexMaskInsert[0][31]})):6'd63;
     free_mask[1] = free_mask[0] & (~(leastOneIndexMaskInsert[0] + 1));
 
-    leastOneIndexMaskInsert[1] = (free_mask[1]) ? (((free_mask[1] - 1) ^ free_mask[1] ) >> 1) : 31'b0;
+    leastOneIndexMaskInsert[1] = (free_mask[1]) ? (((free_mask[1] - 1) ^ free_mask[1] ) >> 1) : 32'b0;
     four_index_array_insert[1] = (free_mask[1]) ? (6'd31 - ({5'b0,leastOneIndexMaskInsert[1][0]} + {5'b0,leastOneIndexMaskInsert[1][1]} + {5'b0,leastOneIndexMaskInsert[1][2]} + {5'b0,leastOneIndexMaskInsert[1][3]} + {5'b0,leastOneIndexMaskInsert[1][4]} + {5'b0,leastOneIndexMaskInsert[1][5]} + {5'b0,leastOneIndexMaskInsert[1][6]} + {5'b0,leastOneIndexMaskInsert[1][7]} + {5'b0,leastOneIndexMaskInsert[1][8]} + {5'b0,leastOneIndexMaskInsert[1][9]} + {5'b0,leastOneIndexMaskInsert[1][10]} + {5'b0,leastOneIndexMaskInsert[1][11]} + {5'b0,leastOneIndexMaskInsert[1][12]} + {5'b0,leastOneIndexMaskInsert[1][13]} + {5'b0,leastOneIndexMaskInsert[1][14]} + {5'b0,leastOneIndexMaskInsert[1][15]} + {5'b0,leastOneIndexMaskInsert[1][16]} + {5'b0,leastOneIndexMaskInsert[1][17]} + {5'b0,leastOneIndexMaskInsert[1][18]} + {5'b0,leastOneIndexMaskInsert[1][19]} + {5'b0,leastOneIndexMaskInsert[1][20]} + {5'b0,leastOneIndexMaskInsert[1][21]} + {5'b0,leastOneIndexMaskInsert[1][22]} + {5'b0,leastOneIndexMaskInsert[1][23]} + {5'b0,leastOneIndexMaskInsert[1][24]} + {5'b0,leastOneIndexMaskInsert[1][25]} + {5'b0,leastOneIndexMaskInsert[1][26]} + {5'b0,leastOneIndexMaskInsert[1][27]} + {5'b0,leastOneIndexMaskInsert[1][28]} + {5'b0,leastOneIndexMaskInsert[1][29]} + {5'b0,leastOneIndexMaskInsert[1][30]} + {5'b0,leastOneIndexMaskInsert[1][31]})):6'd63;
     free_mask[2] = free_mask[1] & (~(leastOneIndexMaskInsert[1] + 1));
 
-    leastOneIndexMaskInsert[2] = (free_mask[2]) ? (((free_mask[2] - 1) ^ free_mask[2] ) >> 1) : 31'b0;
+    leastOneIndexMaskInsert[2] = (free_mask[2]) ? (((free_mask[2] - 1) ^ free_mask[2] ) >> 1) : 32'b0;
     four_index_array_insert[2] = (free_mask[2]) ? (6'd31 - ({5'b0,leastOneIndexMaskInsert[2][0]} + {5'b0,leastOneIndexMaskInsert[2][1]} + {5'b0,leastOneIndexMaskInsert[2][2]} + {5'b0,leastOneIndexMaskInsert[2][3]} + {5'b0,leastOneIndexMaskInsert[2][4]} + {5'b0,leastOneIndexMaskInsert[2][5]} + {5'b0,leastOneIndexMaskInsert[2][6]} + {5'b0,leastOneIndexMaskInsert[2][7]} + {5'b0,leastOneIndexMaskInsert[2][8]} + {5'b0,leastOneIndexMaskInsert[2][9]} + {5'b0,leastOneIndexMaskInsert[2][10]} + {5'b0,leastOneIndexMaskInsert[2][11]} + {5'b0,leastOneIndexMaskInsert[2][12]} + {5'b0,leastOneIndexMaskInsert[2][13]} + {5'b0,leastOneIndexMaskInsert[2][14]} + {5'b0,leastOneIndexMaskInsert[2][15]} + {5'b0,leastOneIndexMaskInsert[2][16]} + {5'b0,leastOneIndexMaskInsert[2][17]} + {5'b0,leastOneIndexMaskInsert[2][18]} + {5'b0,leastOneIndexMaskInsert[2][19]} + {5'b0,leastOneIndexMaskInsert[2][20]} + {5'b0,leastOneIndexMaskInsert[2][21]} + {5'b0,leastOneIndexMaskInsert[2][22]} + {5'b0,leastOneIndexMaskInsert[2][23]} + {5'b0,leastOneIndexMaskInsert[2][24]} + {5'b0,leastOneIndexMaskInsert[2][25]} + {5'b0,leastOneIndexMaskInsert[2][26]} + {5'b0,leastOneIndexMaskInsert[2][27]} + {5'b0,leastOneIndexMaskInsert[2][28]} + {5'b0,leastOneIndexMaskInsert[2][29]} + {5'b0,leastOneIndexMaskInsert[2][30]} + {5'b0,leastOneIndexMaskInsert[2][31]})):6'd63;
     free_mask[3] = free_mask[2] & (~(leastOneIndexMaskInsert[2] + 1));
 
-    leastOneIndexMaskInsert[3] = (free_mask[3]) ? (((free_mask[3] - 1) ^ free_mask[3] ) >> 1) : 31'b0;
+    leastOneIndexMaskInsert[3] = (free_mask[3]) ? (((free_mask[3] - 1) ^ free_mask[3] ) >> 1) : 32'b0;
     four_index_array_insert[3] = (free_mask[3]) ? (6'd31 - ({5'b0,leastOneIndexMaskInsert[3][0]} + {5'b0,leastOneIndexMaskInsert[3][1]} + {5'b0,leastOneIndexMaskInsert[3][2]} + {5'b0,leastOneIndexMaskInsert[3][3]} + {5'b0,leastOneIndexMaskInsert[3][4]} + {5'b0,leastOneIndexMaskInsert[3][5]} + {5'b0,leastOneIndexMaskInsert[3][6]} + {5'b0,leastOneIndexMaskInsert[3][7]} + {5'b0,leastOneIndexMaskInsert[3][8]} + {5'b0,leastOneIndexMaskInsert[3][9]} + {5'b0,leastOneIndexMaskInsert[3][10]} + {5'b0,leastOneIndexMaskInsert[3][11]} + {5'b0,leastOneIndexMaskInsert[3][12]} + {5'b0,leastOneIndexMaskInsert[3][13]} + {5'b0,leastOneIndexMaskInsert[3][14]} + {5'b0,leastOneIndexMaskInsert[3][15]} + {5'b0,leastOneIndexMaskInsert[3][16]} + {5'b0,leastOneIndexMaskInsert[3][17]} + {5'b0,leastOneIndexMaskInsert[3][18]} + {5'b0,leastOneIndexMaskInsert[3][19]} + {5'b0,leastOneIndexMaskInsert[3][20]} + {5'b0,leastOneIndexMaskInsert[3][21]} + {5'b0,leastOneIndexMaskInsert[3][22]} + {5'b0,leastOneIndexMaskInsert[3][23]} + {5'b0,leastOneIndexMaskInsert[3][24]} + {5'b0,leastOneIndexMaskInsert[3][25]} + {5'b0,leastOneIndexMaskInsert[3][26]} + {5'b0,leastOneIndexMaskInsert[3][27]} + {5'b0,leastOneIndexMaskInsert[3][28]} + {5'b0,leastOneIndexMaskInsert[3][29]} + {5'b0,leastOneIndexMaskInsert[3][30]} + {5'b0,leastOneIndexMaskInsert[3][31]})):6'd63;
 end
 
@@ -166,17 +166,22 @@ for (int l = 0; l < 32; l++) begin
 end
 end
 
+assign empty_array_check[0] = (four_index_array[0] != 63);
+assign empty_array_check[1] = (four_index_array[1] != 63);
+assign empty_array_check[2] = (four_index_array[2] != 63);
+assign empty_array_check[3] = (four_index_array[3] != 63);
 
-assign is_valid_removed[0] = (four_index_array[0] != 63) ? 1'b1 : 1'b0;
-assign is_valid_removed[1] = (four_index_array[1] != 63) ? 1'b1 : 1'b0;
-assign is_valid_removed[2] = (four_index_array[2] != 63) ? 1'b1 : 1'b0;
-assign is_valid_removed[3] = (four_index_array[3] != 63) ? 1'b1 : 1'b0;
+assign is_valid_removed[0] = (empty_array_check[0]) ? 1'b1 : 1'b0;
+assign is_valid_removed[1] = (empty_array_check[1]) ? 1'b1 : 1'b0;
+assign is_valid_removed[2] = (empty_array_check[2]) ? 1'b1 : 1'b0;
+assign is_valid_removed[3] = (empty_array_check[3]) ? 1'b1 : 1'b0;
+
 // Output Assignment
 assign numIssued = ({2'b0, is_valid_removed[0]} + {2'b0, is_valid_removed[1]} + {2'b0, is_valid_removed[2]} + {2'b0, is_valid_removed[3]});
-assign issued0 = (four_index_array[0] != 63) ? iq[four_index_array[0]][25:19] : 0; 
-assign issued1 = (four_index_array[1] != 63) ? iq[four_index_array[1]][25:19] : 0;
-assign issued2 = (four_index_array[2] != 63) ? iq[four_index_array[2]][25:19] : 0;
-assign issued3 = (four_index_array[3] != 63) ? iq[four_index_array[3]][25:19] : 0;
+assign issued0 = (empty_array_check[0]) ? iq[four_index_array[0]][25:19] : 0; 
+assign issued1 = (empty_array_check[1]) ? iq[four_index_array[1]][25:19] : 0;
+assign issued2 = (empty_array_check[2]) ? iq[four_index_array[2]][25:19] : 0;
+assign issued3 = (empty_array_check[3]) ? iq[four_index_array[3]][25:19] : 0;
 
 always_ff @ (posedge clk) begin
 if (~reset) begin
