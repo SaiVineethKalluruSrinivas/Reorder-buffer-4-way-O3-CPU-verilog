@@ -6,4 +6,4 @@ set TOP iq
 # Directory where HDL source is found
 set SOURCE_PATH "./src"
 # List of HDL source files to include in synthesis
-set SOURCES {iq_random.sv}
+set SOURCES {iq.sv}

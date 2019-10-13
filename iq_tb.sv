@@ -72,104 +72,85 @@ assign insert_amount = (full_reg) ? 0:({2'b0, inserted[0]} + {2'b0, inserted[1]}
 always_comb begin
 for(int i = 0; i <32; i++) begin
         if(executed && iq[i][0]) begin
-            ready_mask[0][i] = (iq[i][2:1] == 2'b11) ? 1'b1 : 1'b0;
-            executedReg1[i] = (executedReg == iq[i][18:11]) ? 1'b1 : 1'b0;
-            executedReg2[i] = (executedReg == iq[i][10:3]) ? 1'b1 :1'b0;
+            executedReg1[i] = (executedReg == iq[i][18:11]) ? 1'b1 : iq[i][2];
+            executedReg2[i] = (executedReg == iq[i][10:3]) ? 1'b1 :iq[i][1];
         end
         else begin
-            ready_mask[0][i] = iq[i][0];
             executedReg1[i] = iq[i][2];
             executedReg2[i] = iq[i][1];
         end
+        ready_mask[0][i] = ((iq[i][2:1] == 2'b11) && iq[i][0]) ? 1'b1 : 1'b0;
+        free_mask[0][31-i] = (iq[i][0]) ? 1'b0:1'b1; // Finding free mask
 end
-end
-// Finding free mask
-always_comb begin
-for (int j = 0; j <= 31; j++) begin
-    if(~iq[j][0]) begin
-        free_mask[0][31-j] = 1'b1;
-    end
-    else begin
-        free_mask[0][31-j] = 1'b0;
-     end
- end
 end
 
 // Issuing
 // Creating 4 issuing index array
 always_comb begin
-    four_index_array = '{default:6'd63};
-    leastOneIndexMask[0] = ((ready_mask[0] - 1) ^ ready_mask[0] ) >> 1;
-    four_index_array[0] = {5'b0,leastOneIndexMask[0][0]} + {5'b0,leastOneIndexMask[0][1]} + {5'b0,leastOneIndexMask[0][2]} + {5'b0,leastOneIndexMask[0][3]} + {5'b0,leastOneIndexMask[0][4]} + {5'b0,leastOneIndexMask[0][5]} + {5'b0,leastOneIndexMask[0][6]} + {5'b0,leastOneIndexMask[0][7]} + {5'b0,leastOneIndexMask[0][8]} + {5'b0,leastOneIndexMask[0][9]} + {5'b0,leastOneIndexMask[0][10]} + {5'b0,leastOneIndexMask[0][11]} + {5'b0,leastOneIndexMask[0][12]} + {5'b0,leastOneIndexMask[0][13]} + {5'b0,leastOneIndexMask[0][14]} + {5'b0,leastOneIndexMask[0][15]} + {5'b0,leastOneIndexMask[0][16]} + {5'b0,leastOneIndexMask[0][17]} + {5'b0,leastOneIndexMask[0][18]} + {5'b0,leastOneIndexMask[0][19]} + {5'b0,leastOneIndexMask[0][20]} + {5'b0,leastOneIndexMask[0][21]} + {5'b0,leastOneIndexMask[0][22]} + {5'b0,leastOneIndexMask[0][23]} + {5'b0,leastOneIndexMask[0][24]} + {5'b0,leastOneIndexMask[0][25]} + {5'b0,leastOneIndexMask[0][26]} + {5'b0,leastOneIndexMask[0][27]} + {5'b0,leastOneIndexMask[0][28]} + {5'b0,leastOneIndexMask[0][29]} + {5'b0,leastOneIndexMask[0][30]} + {5'b0,leastOneIndexMask[0][31]};
+    leastOneIndexMask[0] = (ready_mask[0]) ? (((ready_mask[0] - 1) ^ ready_mask[0] ) >> 1) : 31'b0;
+    four_index_array[0] = (ready_mask[0]) ? ({5'b0,leastOneIndexMask[0][0]} + {5'b0,leastOneIndexMask[0][1]} + {5'b0,leastOneIndexMask[0][2]} + {5'b0,leastOneIndexMask[0][3]} + {5'b0,leastOneIndexMask[0][4]} + {5'b0,leastOneIndexMask[0][5]} + {5'b0,leastOneIndexMask[0][6]} + {5'b0,leastOneIndexMask[0][7]} + {5'b0,leastOneIndexMask[0][8]} + {5'b0,leastOneIndexMask[0][9]} + {5'b0,leastOneIndexMask[0][10]} + {5'b0,leastOneIndexMask[0][11]} + {5'b0,leastOneIndexMask[0][12]} + {5'b0,leastOneIndexMask[0][13]} + {5'b0,leastOneIndexMask[0][14]} + {5'b0,leastOneIndexMask[0][15]} + {5'b0,leastOneIndexMask[0][16]} + {5'b0,leastOneIndexMask[0][17]} + {5'b0,leastOneIndexMask[0][18]} + {5'b0,leastOneIndexMask[0][19]} + {5'b0,leastOneIndexMask[0][20]} + {5'b0,leastOneIndexMask[0][21]} + {5'b0,leastOneIndexMask[0][22]} + {5'b0,leastOneIndexMask[0][23]} + {5'b0,leastOneIndexMask[0][24]} + {5'b0,leastOneIndexMask[0][25]} + {5'b0,leastOneIndexMask[0][26]} + {5'b0,leastOneIndexMask[0][27]} + {5'b0,leastOneIndexMask[0][28]} + {5'b0,leastOneIndexMask[0][29]} + {5'b0,leastOneIndexMask[0][30]} + {5'b0,leastOneIndexMask[0][31]}):6'd63;
     ready_mask[1] = ready_mask[0] & (~(leastOneIndexMask[0] + 1));
 
-    leastOneIndexMask[1] = ((ready_mask[1] - 1) ^ ready_mask[1] ) >> 1;
-    four_index_array[1] = {5'b0,leastOneIndexMask[1][0]} + {5'b0,leastOneIndexMask[1][1]} + {5'b0,leastOneIndexMask[1][2]} + {5'b0,leastOneIndexMask[1][3]} + {5'b0,leastOneIndexMask[1][4]} + {5'b0,leastOneIndexMask[1][5]} + {5'b0,leastOneIndexMask[1][6]} + {5'b0,leastOneIndexMask[1][7]} + {5'b0,leastOneIndexMask[1][8]} + {5'b0,leastOneIndexMask[1][9]} + {5'b0,leastOneIndexMask[1][10]} + {5'b0,leastOneIndexMask[1][11]} + {5'b0,leastOneIndexMask[1][12]} + {5'b0,leastOneIndexMask[1][13]} + {5'b0,leastOneIndexMask[1][14]} + {5'b0,leastOneIndexMask[1][15]} + {5'b0,leastOneIndexMask[1][16]} + {5'b0,leastOneIndexMask[1][17]} + {5'b0,leastOneIndexMask[1][18]} + {5'b0,leastOneIndexMask[1][19]} + {5'b0,leastOneIndexMask[1][20]} + {5'b0,leastOneIndexMask[1][21]} + {5'b0,leastOneIndexMask[1][22]} + {5'b0,leastOneIndexMask[1][23]} + {5'b0,leastOneIndexMask[1][24]} + {5'b0,leastOneIndexMask[1][25]} + {5'b0,leastOneIndexMask[1][26]} + {5'b0,leastOneIndexMask[1][27]} + {5'b0,leastOneIndexMask[1][28]} + {5'b0,leastOneIndexMask[1][29]} + {5'b0,leastOneIndexMask[1][30]} + {5'b0,leastOneIndexMask[1][31]};
+    leastOneIndexMask[1] = (ready_mask[1]) ? (((ready_mask[1] - 1) ^ ready_mask[1] ) >> 1) : 31'b0;
+    four_index_array[1] = (ready_mask[1]) ? ({5'b0,leastOneIndexMask[1][0]} + {5'b0,leastOneIndexMask[1][1]} + {5'b0,leastOneIndexMask[1][2]} + {5'b0,leastOneIndexMask[1][3]} + {5'b0,leastOneIndexMask[1][4]} + {5'b0,leastOneIndexMask[1][5]} + {5'b0,leastOneIndexMask[1][6]} + {5'b0,leastOneIndexMask[1][7]} + {5'b0,leastOneIndexMask[1][8]} + {5'b0,leastOneIndexMask[1][9]} + {5'b0,leastOneIndexMask[1][10]} + {5'b0,leastOneIndexMask[1][11]} + {5'b0,leastOneIndexMask[1][12]} + {5'b0,leastOneIndexMask[1][13]} + {5'b0,leastOneIndexMask[1][14]} + {5'b0,leastOneIndexMask[1][15]} + {5'b0,leastOneIndexMask[1][16]} + {5'b0,leastOneIndexMask[1][17]} + {5'b0,leastOneIndexMask[1][18]} + {5'b0,leastOneIndexMask[1][19]} + {5'b0,leastOneIndexMask[1][20]} + {5'b0,leastOneIndexMask[1][21]} + {5'b0,leastOneIndexMask[1][22]} + {5'b0,leastOneIndexMask[1][23]} + {5'b0,leastOneIndexMask[1][24]} + {5'b0,leastOneIndexMask[1][25]} + {5'b0,leastOneIndexMask[1][26]} + {5'b0,leastOneIndexMask[1][27]} + {5'b0,leastOneIndexMask[1][28]} + {5'b0,leastOneIndexMask[1][29]} + {5'b0,leastOneIndexMask[1][30]} + {5'b0,leastOneIndexMask[1][31]}):6'd63;
     ready_mask[2] = ready_mask[1] & (~(leastOneIndexMask[1] + 1));
 
-    leastOneIndexMask[2] = ((ready_mask[2] - 1) ^ ready_mask[2] ) >> 1;
-    four_index_array[2] = {5'b0,leastOneIndexMask[2][0]} + {5'b0,leastOneIndexMask[2][1]} + {5'b0,leastOneIndexMask[2][2]} + {5'b0,leastOneIndexMask[2][3]} + {5'b0,leastOneIndexMask[2][4]} + {5'b0,leastOneIndexMask[2][5]} + {5'b0,leastOneIndexMask[2][6]} + {5'b0,leastOneIndexMask[2][7]} + {5'b0,leastOneIndexMask[2][8]} + {5'b0,leastOneIndexMask[2][9]} + {5'b0,leastOneIndexMask[2][10]} + {5'b0,leastOneIndexMask[2][11]} + {5'b0,leastOneIndexMask[2][12]} + {5'b0,leastOneIndexMask[2][13]} + {5'b0,leastOneIndexMask[2][14]} + {5'b0,leastOneIndexMask[2][15]} + {5'b0,leastOneIndexMask[2][16]} + {5'b0,leastOneIndexMask[2][17]} + {5'b0,leastOneIndexMask[2][18]} + {5'b0,leastOneIndexMask[2][19]} + {5'b0,leastOneIndexMask[2][20]} + {5'b0,leastOneIndexMask[2][21]} + {5'b0,leastOneIndexMask[2][22]} + {5'b0,leastOneIndexMask[2][23]} + {5'b0,leastOneIndexMask[2][24]} + {5'b0,leastOneIndexMask[2][25]} + {5'b0,leastOneIndexMask[2][26]} + {5'b0,leastOneIndexMask[2][27]} + {5'b0,leastOneIndexMask[2][28]} + {5'b0,leastOneIndexMask[2][29]} + {5'b0,leastOneIndexMask[2][30]} + {5'b0,leastOneIndexMask[2][31]};
+    leastOneIndexMask[2] = (ready_mask[2]) ? (((ready_mask[2] - 1) ^ ready_mask[2] ) >> 1) : 31'b0;
+    four_index_array[2] = (ready_mask[2]) ? ({5'b0,leastOneIndexMask[2][0]} + {5'b0,leastOneIndexMask[2][1]} + {5'b0,leastOneIndexMask[2][2]} + {5'b0,leastOneIndexMask[2][3]} + {5'b0,leastOneIndexMask[2][4]} + {5'b0,leastOneIndexMask[2][5]} + {5'b0,leastOneIndexMask[2][6]} + {5'b0,leastOneIndexMask[2][7]} + {5'b0,leastOneIndexMask[2][8]} + {5'b0,leastOneIndexMask[2][9]} + {5'b0,leastOneIndexMask[2][10]} + {5'b0,leastOneIndexMask[2][11]} + {5'b0,leastOneIndexMask[2][12]} + {5'b0,leastOneIndexMask[2][13]} + {5'b0,leastOneIndexMask[2][14]} + {5'b0,leastOneIndexMask[2][15]} + {5'b0,leastOneIndexMask[2][16]} + {5'b0,leastOneIndexMask[2][17]} + {5'b0,leastOneIndexMask[2][18]} + {5'b0,leastOneIndexMask[2][19]} + {5'b0,leastOneIndexMask[2][20]} + {5'b0,leastOneIndexMask[2][21]} + {5'b0,leastOneIndexMask[2][22]} + {5'b0,leastOneIndexMask[2][23]} + {5'b0,leastOneIndexMask[2][24]} + {5'b0,leastOneIndexMask[2][25]} + {5'b0,leastOneIndexMask[2][26]} + {5'b0,leastOneIndexMask[2][27]} + {5'b0,leastOneIndexMask[2][28]} + {5'b0,leastOneIndexMask[2][29]} + {5'b0,leastOneIndexMask[2][30]} + {5'b0,leastOneIndexMask[2][31]}):6'd63;
     ready_mask[3] = ready_mask[2] & (~(leastOneIndexMask[2] + 1));
 
-    leastOneIndexMask[3] = ((ready_mask[3] - 1) ^ ready_mask[3] ) >> 1;
-    four_index_array[3] = {5'b0,leastOneIndexMask[3][0]} + {5'b0,leastOneIndexMask[3][1]} + {5'b0,leastOneIndexMask[3][2]} + {5'b0,leastOneIndexMask[3][3]} + {5'b0,leastOneIndexMask[3][4]} + {5'b0,leastOneIndexMask[3][5]} + {5'b0,leastOneIndexMask[3][6]} + {5'b0,leastOneIndexMask[3][7]} + {5'b0,leastOneIndexMask[3][8]} + {5'b0,leastOneIndexMask[3][9]} + {5'b0,leastOneIndexMask[3][10]} + {5'b0,leastOneIndexMask[3][11]} + {5'b0,leastOneIndexMask[3][12]} + {5'b0,leastOneIndexMask[3][13]} + {5'b0,leastOneIndexMask[3][14]} + {5'b0,leastOneIndexMask[3][15]} + {5'b0,leastOneIndexMask[3][16]} + {5'b0,leastOneIndexMask[3][17]} + {5'b0,leastOneIndexMask[3][18]} + {5'b0,leastOneIndexMask[3][19]} + {5'b0,leastOneIndexMask[3][20]} + {5'b0,leastOneIndexMask[3][21]} + {5'b0,leastOneIndexMask[3][22]} + {5'b0,leastOneIndexMask[3][23]} + {5'b0,leastOneIndexMask[3][24]} + {5'b0,leastOneIndexMask[3][25]} + {5'b0,leastOneIndexMask[3][26]} + {5'b0,leastOneIndexMask[3][27]} + {5'b0,leastOneIndexMask[3][28]} + {5'b0,leastOneIndexMask[3][29]} + {5'b0,leastOneIndexMask[3][30]} + {5'b0,leastOneIndexMask[3][31]};
+    leastOneIndexMask[3] = (ready_mask[3]) ? (((ready_mask[3] - 1) ^ ready_mask[3] ) >> 1) : 31'b0;
+    four_index_array[3] = (ready_mask[3]) ? ({5'b0,leastOneIndexMask[3][0]} + {5'b0,leastOneIndexMask[3][1]} + {5'b0,leastOneIndexMask[3][2]} + {5'b0,leastOneIndexMask[3][3]} + {5'b0,leastOneIndexMask[3][4]} + {5'b0,leastOneIndexMask[3][5]} + {5'b0,leastOneIndexMask[3][6]} + {5'b0,leastOneIndexMask[3][7]} + {5'b0,leastOneIndexMask[3][8]} + {5'b0,leastOneIndexMask[3][9]} + {5'b0,leastOneIndexMask[3][10]} + {5'b0,leastOneIndexMask[3][11]} + {5'b0,leastOneIndexMask[3][12]} + {5'b0,leastOneIndexMask[3][13]} + {5'b0,leastOneIndexMask[3][14]} + {5'b0,leastOneIndexMask[3][15]} + {5'b0,leastOneIndexMask[3][16]} + {5'b0,leastOneIndexMask[3][17]} + {5'b0,leastOneIndexMask[3][18]} + {5'b0,leastOneIndexMask[3][19]} + {5'b0,leastOneIndexMask[3][20]} + {5'b0,leastOneIndexMask[3][21]} + {5'b0,leastOneIndexMask[3][22]} + {5'b0,leastOneIndexMask[3][23]} + {5'b0,leastOneIndexMask[3][24]} + {5'b0,leastOneIndexMask[3][25]} + {5'b0,leastOneIndexMask[3][26]} + {5'b0,leastOneIndexMask[3][27]} + {5'b0,leastOneIndexMask[3][28]} + {5'b0,leastOneIndexMask[3][29]} + {5'b0,leastOneIndexMask[3][30]} + {5'b0,leastOneIndexMask[3][31]}):6'd63;
 
 end
 
 
 always_comb begin
 for (int k = 0; k < 32; k++) begin
-    if(k == four_index_array[0] || k== four_index_array[1] || k==four_index_array[2] || k==four_index_array[3]) begin
-        busybitAcc[k] = 1'b0;
-    end
-    else begin
-        busybitAcc[k] = iq[k][0];
-    end
+    busybitAcc[k] = (k == four_index_array[0] || k== four_index_array[1] || k==four_index_array[2] || k==four_index_array[3]) ? 1'b0:iq[k][0];
 end
 end
 
 always_comb begin
-    four_index_array_insert = '{default:6'd63};
-    leastOneIndexMaskInsert[0] = ((free_mask[0] - 1) ^ free_mask[0] ) >> 1;
-    four_index_array_insert[0] = 5'd31 - {5'b0,leastOneIndexMaskInsert[0][0]} + {5'b0,leastOneIndexMaskInsert[0][1]} + {5'b0,leastOneIndexMaskInsert[0][2]} + {5'b0,leastOneIndexMaskInsert[0][3]} + {5'b0,leastOneIndexMaskInsert[0][4]} + {5'b0,leastOneIndexMaskInsert[0][5]} + {5'b0,leastOneIndexMaskInsert[0][6]} + {5'b0,leastOneIndexMaskInsert[0][7]} + {5'b0,leastOneIndexMaskInsert[0][8]} + {5'b0,leastOneIndexMaskInsert[0][9]} + {5'b0,leastOneIndexMaskInsert[0][10]} + {5'b0,leastOneIndexMaskInsert[0][11]} + {5'b0,leastOneIndexMaskInsert[0][12]} + {5'b0,leastOneIndexMaskInsert[0][13]} + {5'b0,leastOneIndexMaskInsert[0][14]} + {5'b0,leastOneIndexMaskInsert[0][15]} + {5'b0,leastOneIndexMaskInsert[0][16]} + {5'b0,leastOneIndexMaskInsert[0][17]} + {5'b0,leastOneIndexMaskInsert[0][18]} + {5'b0,leastOneIndexMaskInsert[0][19]} + {5'b0,leastOneIndexMaskInsert[0][20]} + {5'b0,leastOneIndexMaskInsert[0][21]} + {5'b0,leastOneIndexMaskInsert[0][22]} + {5'b0,leastOneIndexMaskInsert[0][23]} + {5'b0,leastOneIndexMaskInsert[0][24]} + {5'b0,leastOneIndexMaskInsert[0][25]} + {5'b0,leastOneIndexMaskInsert[0][26]} + {5'b0,leastOneIndexMaskInsert[0][27]} + {5'b0,leastOneIndexMaskInsert[0][28]} + {5'b0,leastOneIndexMaskInsert[0][29]} + {5'b0,leastOneIndexMaskInsert[0][30]} + {5'b0,leastOneIndexMaskInsert[0][31]};
+    leastOneIndexMaskInsert[0] = (free_mask[0]) ? (((free_mask[0] - 1) ^ free_mask[0] ) >> 1) : 31'b0;
+    four_index_array_insert[0] = (free_mask[0]) ? (6'd31 - ({5'b0,leastOneIndexMaskInsert[0][0]} + {5'b0,leastOneIndexMaskInsert[0][1]} + {5'b0,leastOneIndexMaskInsert[0][2]} + {5'b0,leastOneIndexMaskInsert[0][3]} + {5'b0,leastOneIndexMaskInsert[0][4]} + {5'b0,leastOneIndexMaskInsert[0][5]} + {5'b0,leastOneIndexMaskInsert[0][6]} + {5'b0,leastOneIndexMaskInsert[0][7]} + {5'b0,leastOneIndexMaskInsert[0][8]} + {5'b0,leastOneIndexMaskInsert[0][9]} + {5'b0,leastOneIndexMaskInsert[0][10]} + {5'b0,leastOneIndexMaskInsert[0][11]} + {5'b0,leastOneIndexMaskInsert[0][12]} + {5'b0,leastOneIndexMaskInsert[0][13]} + {5'b0,leastOneIndexMaskInsert[0][14]} + {5'b0,leastOneIndexMaskInsert[0][15]} + {5'b0,leastOneIndexMaskInsert[0][16]} + {5'b0,leastOneIndexMaskInsert[0][17]} + {5'b0,leastOneIndexMaskInsert[0][18]} + {5'b0,leastOneIndexMaskInsert[0][19]} + {5'b0,leastOneIndexMaskInsert[0][20]} + {5'b0,leastOneIndexMaskInsert[0][21]} + {5'b0,leastOneIndexMaskInsert[0][22]} + {5'b0,leastOneIndexMaskInsert[0][23]} + {5'b0,leastOneIndexMaskInsert[0][24]} + {5'b0,leastOneIndexMaskInsert[0][25]} + {5'b0,leastOneIndexMaskInsert[0][26]} + {5'b0,leastOneIndexMaskInsert[0][27]} + {5'b0,leastOneIndexMaskInsert[0][28]} + {5'b0,leastOneIndexMaskInsert[0][29]} + {5'b0,leastOneIndexMaskInsert[0][30]} + {5'b0,leastOneIndexMaskInsert[0][31]})):6'd63;
     free_mask[1] = free_mask[0] & (~(leastOneIndexMaskInsert[0] + 1));
 
-    leastOneIndexMaskInsert[1] = ((free_mask[1] - 1) ^ free_mask[1] ) >> 1;
-    four_index_array_insert[1] = 5'd31 - {5'b0,leastOneIndexMaskInsert[1][0]} + {5'b0,leastOneIndexMaskInsert[1][1]} + {5'b0,leastOneIndexMaskInsert[1][2]} + {5'b0,leastOneIndexMaskInsert[1][3]} + {5'b0,leastOneIndexMaskInsert[1][4]} + {5'b0,leastOneIndexMaskInsert[1][5]} + {5'b0,leastOneIndexMaskInsert[1][6]} + {5'b0,leastOneIndexMaskInsert[1][7]} + {5'b0,leastOneIndexMaskInsert[1][8]} + {5'b0,leastOneIndexMaskInsert[1][9]} + {5'b0,leastOneIndexMaskInsert[1][10]} + {5'b0,leastOneIndexMaskInsert[1][11]} + {5'b0,leastOneIndexMaskInsert[1][12]} + {5'b0,leastOneIndexMaskInsert[1][13]} + {5'b0,leastOneIndexMaskInsert[1][14]} + {5'b0,leastOneIndexMaskInsert[1][15]} + {5'b0,leastOneIndexMaskInsert[1][16]} + {5'b0,leastOneIndexMaskInsert[1][17]} + {5'b0,leastOneIndexMaskInsert[1][18]} + {5'b0,leastOneIndexMaskInsert[1][19]} + {5'b0,leastOneIndexMaskInsert[1][20]} + {5'b0,leastOneIndexMaskInsert[1][21]} + {5'b0,leastOneIndexMaskInsert[1][22]} + {5'b0,leastOneIndexMaskInsert[1][23]} + {5'b0,leastOneIndexMaskInsert[1][24]} + {5'b0,leastOneIndexMaskInsert[1][25]} + {5'b0,leastOneIndexMaskInsert[1][26]} + {5'b0,leastOneIndexMaskInsert[1][27]} + {5'b0,leastOneIndexMaskInsert[1][28]} + {5'b0,leastOneIndexMaskInsert[1][29]} + {5'b0,leastOneIndexMaskInsert[1][30]} + {5'b0,leastOneIndexMaskInsert[1][31]};
+    leastOneIndexMaskInsert[1] = (free_mask[1]) ? (((free_mask[1] - 1) ^ free_mask[1] ) >> 1) : 31'b0;
+    four_index_array_insert[1] = (free_mask[1]) ? (6'd31 - ({5'b0,leastOneIndexMaskInsert[1][0]} + {5'b0,leastOneIndexMaskInsert[1][1]} + {5'b0,leastOneIndexMaskInsert[1][2]} + {5'b0,leastOneIndexMaskInsert[1][3]} + {5'b0,leastOneIndexMaskInsert[1][4]} + {5'b0,leastOneIndexMaskInsert[1][5]} + {5'b0,leastOneIndexMaskInsert[1][6]} + {5'b0,leastOneIndexMaskInsert[1][7]} + {5'b0,leastOneIndexMaskInsert[1][8]} + {5'b0,leastOneIndexMaskInsert[1][9]} + {5'b0,leastOneIndexMaskInsert[1][10]} + {5'b0,leastOneIndexMaskInsert[1][11]} + {5'b0,leastOneIndexMaskInsert[1][12]} + {5'b0,leastOneIndexMaskInsert[1][13]} + {5'b0,leastOneIndexMaskInsert[1][14]} + {5'b0,leastOneIndexMaskInsert[1][15]} + {5'b0,leastOneIndexMaskInsert[1][16]} + {5'b0,leastOneIndexMaskInsert[1][17]} + {5'b0,leastOneIndexMaskInsert[1][18]} + {5'b0,leastOneIndexMaskInsert[1][19]} + {5'b0,leastOneIndexMaskInsert[1][20]} + {5'b0,leastOneIndexMaskInsert[1][21]} + {5'b0,leastOneIndexMaskInsert[1][22]} + {5'b0,leastOneIndexMaskInsert[1][23]} + {5'b0,leastOneIndexMaskInsert[1][24]} + {5'b0,leastOneIndexMaskInsert[1][25]} + {5'b0,leastOneIndexMaskInsert[1][26]} + {5'b0,leastOneIndexMaskInsert[1][27]} + {5'b0,leastOneIndexMaskInsert[1][28]} + {5'b0,leastOneIndexMaskInsert[1][29]} + {5'b0,leastOneIndexMaskInsert[1][30]} + {5'b0,leastOneIndexMaskInsert[1][31]})):6'd63;
     free_mask[2] = free_mask[1] & (~(leastOneIndexMaskInsert[1] + 1));
 
-    leastOneIndexMaskInsert[2] = ((free_mask[2] - 1) ^ free_mask[2] ) >> 1;
-    four_index_array_insert[2] = 5'd31 - {5'b0,leastOneIndexMaskInsert[2][0]} + {5'b0,leastOneIndexMaskInsert[2][1]} + {5'b0,leastOneIndexMaskInsert[2][2]} + {5'b0,leastOneIndexMaskInsert[2][3]} + {5'b0,leastOneIndexMaskInsert[2][4]} + {5'b0,leastOneIndexMaskInsert[2][5]} + {5'b0,leastOneIndexMaskInsert[2][6]} + {5'b0,leastOneIndexMaskInsert[2][7]} + {5'b0,leastOneIndexMaskInsert[2][8]} + {5'b0,leastOneIndexMaskInsert[2][9]} + {5'b0,leastOneIndexMaskInsert[2][10]} + {5'b0,leastOneIndexMaskInsert[2][11]} + {5'b0,leastOneIndexMaskInsert[2][12]} + {5'b0,leastOneIndexMaskInsert[2][13]} + {5'b0,leastOneIndexMaskInsert[2][14]} + {5'b0,leastOneIndexMaskInsert[2][15]} + {5'b0,leastOneIndexMaskInsert[2][16]} + {5'b0,leastOneIndexMaskInsert[2][17]} + {5'b0,leastOneIndexMaskInsert[2][18]} + {5'b0,leastOneIndexMaskInsert[2][19]} + {5'b0,leastOneIndexMaskInsert[2][20]} + {5'b0,leastOneIndexMaskInsert[2][21]} + {5'b0,leastOneIndexMaskInsert[2][22]} + {5'b0,leastOneIndexMaskInsert[2][23]} + {5'b0,leastOneIndexMaskInsert[2][24]} + {5'b0,leastOneIndexMaskInsert[2][25]} + {5'b0,leastOneIndexMaskInsert[2][26]} + {5'b0,leastOneIndexMaskInsert[2][27]} + {5'b0,leastOneIndexMaskInsert[2][28]} + {5'b0,leastOneIndexMaskInsert[2][29]} + {5'b0,leastOneIndexMaskInsert[2][30]} + {5'b0,leastOneIndexMaskInsert[2][31]};
+    leastOneIndexMaskInsert[2] = (free_mask[2]) ? (((free_mask[2] - 1) ^ free_mask[2] ) >> 1) : 31'b0;
+    four_index_array_insert[2] = (free_mask[2]) ? (6'd31 - ({5'b0,leastOneIndexMaskInsert[2][0]} + {5'b0,leastOneIndexMaskInsert[2][1]} + {5'b0,leastOneIndexMaskInsert[2][2]} + {5'b0,leastOneIndexMaskInsert[2][3]} + {5'b0,leastOneIndexMaskInsert[2][4]} + {5'b0,leastOneIndexMaskInsert[2][5]} + {5'b0,leastOneIndexMaskInsert[2][6]} + {5'b0,leastOneIndexMaskInsert[2][7]} + {5'b0,leastOneIndexMaskInsert[2][8]} + {5'b0,leastOneIndexMaskInsert[2][9]} + {5'b0,leastOneIndexMaskInsert[2][10]} + {5'b0,leastOneIndexMaskInsert[2][11]} + {5'b0,leastOneIndexMaskInsert[2][12]} + {5'b0,leastOneIndexMaskInsert[2][13]} + {5'b0,leastOneIndexMaskInsert[2][14]} + {5'b0,leastOneIndexMaskInsert[2][15]} + {5'b0,leastOneIndexMaskInsert[2][16]} + {5'b0,leastOneIndexMaskInsert[2][17]} + {5'b0,leastOneIndexMaskInsert[2][18]} + {5'b0,leastOneIndexMaskInsert[2][19]} + {5'b0,leastOneIndexMaskInsert[2][20]} + {5'b0,leastOneIndexMaskInsert[2][21]} + {5'b0,leastOneIndexMaskInsert[2][22]} + {5'b0,leastOneIndexMaskInsert[2][23]} + {5'b0,leastOneIndexMaskInsert[2][24]} + {5'b0,leastOneIndexMaskInsert[2][25]} + {5'b0,leastOneIndexMaskInsert[2][26]} + {5'b0,leastOneIndexMaskInsert[2][27]} + {5'b0,leastOneIndexMaskInsert[2][28]} + {5'b0,leastOneIndexMaskInsert[2][29]} + {5'b0,leastOneIndexMaskInsert[2][30]} + {5'b0,leastOneIndexMaskInsert[2][31]})):6'd63;
     free_mask[3] = free_mask[2] & (~(leastOneIndexMaskInsert[2] + 1));
 
-    leastOneIndexMaskInsert[3] = ((free_mask[3] - 1) ^ free_mask[3] ) >> 1;
-    four_index_array_insert[3] = 5'd31 - {5'b0,leastOneIndexMaskInsert[3][0]} + {5'b0,leastOneIndexMaskInsert[3][1]} + {5'b0,leastOneIndexMaskInsert[3][2]} + {5'b0,leastOneIndexMaskInsert[3][3]} + {5'b0,leastOneIndexMaskInsert[3][4]} + {5'b0,leastOneIndexMaskInsert[3][5]} + {5'b0,leastOneIndexMaskInsert[3][6]} + {5'b0,leastOneIndexMaskInsert[3][7]} + {5'b0,leastOneIndexMaskInsert[3][8]} + {5'b0,leastOneIndexMaskInsert[3][9]} + {5'b0,leastOneIndexMaskInsert[3][10]} + {5'b0,leastOneIndexMaskInsert[3][11]} + {5'b0,leastOneIndexMaskInsert[3][12]} + {5'b0,leastOneIndexMaskInsert[3][13]} + {5'b0,leastOneIndexMaskInsert[3][14]} + {5'b0,leastOneIndexMaskInsert[3][15]} + {5'b0,leastOneIndexMaskInsert[3][16]} + {5'b0,leastOneIndexMaskInsert[3][17]} + {5'b0,leastOneIndexMaskInsert[3][18]} + {5'b0,leastOneIndexMaskInsert[3][19]} + {5'b0,leastOneIndexMaskInsert[3][20]} + {5'b0,leastOneIndexMaskInsert[3][21]} + {5'b0,leastOneIndexMaskInsert[3][22]} + {5'b0,leastOneIndexMaskInsert[3][23]} + {5'b0,leastOneIndexMaskInsert[3][24]} + {5'b0,leastOneIndexMaskInsert[3][25]} + {5'b0,leastOneIndexMaskInsert[3][26]} + {5'b0,leastOneIndexMaskInsert[3][27]} + {5'b0,leastOneIndexMaskInsert[3][28]} + {5'b0,leastOneIndexMaskInsert[3][29]} + {5'b0,leastOneIndexMaskInsert[3][30]} + {5'b0,leastOneIndexMaskInsert[3][31]};
-
+    leastOneIndexMaskInsert[3] = (free_mask[3]) ? (((free_mask[3] - 1) ^ free_mask[3] ) >> 1) : 31'b0;
+    four_index_array_insert[3] = (free_mask[3]) ? (6'd31 - ({5'b0,leastOneIndexMaskInsert[3][0]} + {5'b0,leastOneIndexMaskInsert[3][1]} + {5'b0,leastOneIndexMaskInsert[3][2]} + {5'b0,leastOneIndexMaskInsert[3][3]} + {5'b0,leastOneIndexMaskInsert[3][4]} + {5'b0,leastOneIndexMaskInsert[3][5]} + {5'b0,leastOneIndexMaskInsert[3][6]} + {5'b0,leastOneIndexMaskInsert[3][7]} + {5'b0,leastOneIndexMaskInsert[3][8]} + {5'b0,leastOneIndexMaskInsert[3][9]} + {5'b0,leastOneIndexMaskInsert[3][10]} + {5'b0,leastOneIndexMaskInsert[3][11]} + {5'b0,leastOneIndexMaskInsert[3][12]} + {5'b0,leastOneIndexMaskInsert[3][13]} + {5'b0,leastOneIndexMaskInsert[3][14]} + {5'b0,leastOneIndexMaskInsert[3][15]} + {5'b0,leastOneIndexMaskInsert[3][16]} + {5'b0,leastOneIndexMaskInsert[3][17]} + {5'b0,leastOneIndexMaskInsert[3][18]} + {5'b0,leastOneIndexMaskInsert[3][19]} + {5'b0,leastOneIndexMaskInsert[3][20]} + {5'b0,leastOneIndexMaskInsert[3][21]} + {5'b0,leastOneIndexMaskInsert[3][22]} + {5'b0,leastOneIndexMaskInsert[3][23]} + {5'b0,leastOneIndexMaskInsert[3][24]} + {5'b0,leastOneIndexMaskInsert[3][25]} + {5'b0,leastOneIndexMaskInsert[3][26]} + {5'b0,leastOneIndexMaskInsert[3][27]} + {5'b0,leastOneIndexMaskInsert[3][28]} + {5'b0,leastOneIndexMaskInsert[3][29]} + {5'b0,leastOneIndexMaskInsert[3][30]} + {5'b0,leastOneIndexMaskInsert[3][31]})):6'd63;
 end
 
 always_comb begin
 for (int l = 0; l < 32; l++) begin
-    if(l == four_index_array_insert[0]) begin
+    if(l == four_index_array_insert[0] && inserted[0]) begin
         iq_n[l][0] = inserted_0_reg[0];
         iq_n[l][25:3] = inserted_0_reg[25:3];
         iq_n[l][2] = inserted_0_reg[2];
         iq_n[l][1] = inserted_0_reg[1];
     end
-    else if(l == four_index_array_insert[1]) begin
+    else if(l == four_index_array_insert[1] && inserted[1]) begin
         iq_n[l][0] = inserted_1_reg[0];
         iq_n[l][25:3] = inserted_1_reg[25:3];
         iq_n[l][2] = inserted_1_reg[2];
         iq_n[l][1] = inserted_1_reg[1];
     end
 
-    else if(l == four_index_array_insert[2]) begin
+    else if(l == four_index_array_insert[2] && inserted[2]) begin
         iq_n[l][0] = inserted_2_reg[0];
         iq_n[l][25:3] = inserted_2_reg[25:3];
         iq_n[l][2] = inserted_2_reg[2];
         iq_n[l][1] = inserted_2_reg[1];
     end
 
-    else if(l == four_index_array_insert[3]) begin
+    else if(l == four_index_array_insert[3] && inserted[3]) begin
         iq_n[l][0] = inserted_3_reg[0];
         iq_n[l][25:3] = inserted_3_reg[25:3];
         iq_n[l][2] = inserted_3_reg[2];
@@ -213,17 +194,17 @@ module iq_tb;
     parameter  ClockDelay = 10;
                     
 
- logic clk,
- logic reset,
+ logic clk;
+ logic reset;
  logic [3:0] inserted;
  logic [6:0] robIdx0;
  logic [7:0] srcReg0_1;
  logic [7:0] srcReg0_2; 
-  logic [6:0] robIdx1;
-  logic [7:0] srcReg1_1;
-  logic [7:0] srcReg1_2;
-  logic [6:0] robIdx2;
-  logic [7:0] srcReg2_1;
+ logic [6:0] robIdx1;
+ logic [7:0] srcReg1_1;
+ logic [7:0] srcReg1_2;
+ logic [6:0] robIdx2;
+ logic [7:0] srcReg2_1;
  logic [7:0] srcReg2_2;
  logic [6:0] robIdx3;
  logic [7:0] srcReg3_1;
@@ -238,7 +219,7 @@ module iq_tb;
  logic full;
 
     iq DUT (clk, reset, inserted, robIdx0, srcReg0_1, srcReg0_2, robIdx1, srcReg1_1, srcReg1_2, robIdx2, srcReg2_1, srcReg2_2, robIdx3, srcReg3_1, srcReg3_2,
-        executed, executedReg, numIssued, issued0, issued1, issued2, issued3);
+        executed, executedReg, numIssued, issued0, issued1, issued2, issued3, full);
 
 	initial begin // Set up the clock
 		clk <= 0;
@@ -251,46 +232,39 @@ module iq_tb;
 
         // Reset ports
         reset <= 0;
-        inserted <= 4'b0;
-        archReg0 <= 5'b0;
-        physReg0 <= 8'b0;
-        opcode0 <= 11'b0;
-        archReg1 <= 5'b0;
-        physReg1 <= 8'b0;
-        opcode1 <= 11'b0;
-        archReg2 <= 5'b0;
-        physReg2 <= 8'b0;
-        opcode2 <= 11'b0;
-        archReg3 <= 5'b0;
-        physReg3 <= 8'b0;
-        opcode3 <= 11'b0;
-        flushInst <= 1'b0;
-        flushIndex <= 7'b0;
-        exception <= 1'b0;
-        exceptionIndex <= 7'b0;
-        executed <= 4'b0;
-        executedIndex0 <= 7'b0;
-        executedIndex1 <= 7'b0;
-        executedIndex2 <= 7'b0;
-        executedIndex3 <= 7'b0;
+        inserted <= 0;
+        robIdx0 <= 0;
+        srcReg0_1 <= 0;
+        srcReg0_2 <= 0; 
+        robIdx1 <= 0;
+        srcReg1_1 <= 0;
+        srcReg1_2 <= 0;
+        robIdx2 <= 0;
+        srcReg2_1 <= 0;
+        srcReg2_2 <= 0;
+        robIdx3 <= 0;
+        srcReg3_1 <= 0;
+        srcReg3_2 <= 0;
+        executed <= 0;
+        executedReg <= 0;
         @(posedge clk);
         @(posedge clk);
         reset <= 1;
         @(posedge clk);
         // Test insertion
         inserted <= 4'b0001;
-        archReg0 <= 5'd0;
-        physReg0 <= 8'd0;
-        opcode0 <= 11'd1;
-        archReg1 <= 5'd0;
-        physReg1 <= 8'd0;
-        opcode1 <= 11'd2;
-        archReg2 <= 5'd0;
-        physReg2 <= 8'd0;
-        opcode2 <= 11'd3;
-        archReg3 <= 5'd0;
-        physReg3 <= 8'd0;
-        opcode3 <= 11'd4;
+        robIdx0 <= 7'h1;
+        srcReg0_1 <= 8'h55;
+        srcReg0_2 <= 8'h66; 
+        robIdx1 <= 7'h2;
+        srcReg1_1 <= 8'h77;
+        srcReg1_2 <= 8'h88;
+        robIdx2 <= 7'h3;
+        srcReg2_1 <= 8'h55;
+        srcReg2_2 <= 8'h66;
+        robIdx3 <= 7'h4;
+        srcReg3_1 <= 8'h77;
+        srcReg3_2 <= 8'h88;
         @(posedge clk);
         inserted <= 4'b0011;
         @(posedge clk);
@@ -300,71 +274,75 @@ module iq_tb;
         @(posedge clk);
         inserted <= 4'b0000;
         inserted <= 4'b0;
-        archReg0 <= 5'b0;
-        physReg0 <= 8'b0;
-        opcode0 <= 11'b0;
-        archReg1 <= 5'b0;
-        physReg1 <= 8'b0;
-        opcode1 <= 11'b0;
-        archReg2 <= 5'b0;
-        physReg2 <= 8'b0;
-        opcode2 <= 11'b0;
-        archReg3 <= 5'b0;
-        physReg3 <= 8'b0;
-        opcode3 <= 11'b0;
+        robIdx0 <= 0;
+        srcReg0_1 <= 0;
+        srcReg0_2 <= 0; 
+        robIdx1 <= 0;
+        srcReg1_1 <= 0;
+        srcReg1_2 <= 0;
+        robIdx2 <= 0;
+        srcReg2_1 <= 0;
+        srcReg2_2 <= 0;
+        robIdx3 <= 0;
+        srcReg3_1 <= 0;
+        srcReg3_2 <= 0;
         @(posedge clk);
-        // Test flush and exception
-        flushIndex <= 7'd4;
-        flushInst <= 1;
-        exception <= 1;
-        exceptionIndex <= 7'd5;
+        // Test execution
+        executed <= 1;
+        executedReg <= 8'h77;
         @(posedge clk);
-        flushInst <= 0;
-        exception <= 0;
+        executed <= 1;
+        executedReg <= 8'h66;
         @(posedge clk);
-        // Test executed on non-commited and commited entry
-        executed <= 4'b1111;
-        executedIndex0 <= 7'd7;
-        executedIndex1 <= 7'd8;
-        executedIndex2 <= 7'd9;
-        executedIndex3 <= 7'd6;
+        executed <= 1;
+        executedReg <= 8'h55;
         @(posedge clk);
-        executed <= 4'b0101;
-        executedIndex0 <= 7'd4;
-        executedIndex2 <= 7'd5;
-        @(posedge clk);
-        executed <= 4'b1111;
-        executedIndex0 <= 7'd0;
-        executedIndex1 <= 7'd1;
-        executedIndex2 <= 7'd2;
-        executedIndex3 <= 7'd3;
+        executed <= 1;
+        executedReg <= 8'h88;
         @(posedge clk);
         executed <= 4'b0;
+        executedReg <= 8'b0;
         @(posedge clk);
-        inserted <= 4'b1111;
-        archReg0 <= 5'd0;
-        physReg0 <= 8'd0;
-        opcode0 <= 11'd1;
-        archReg1 <= 5'd0;
-        physReg1 <= 8'd0;
-        opcode1 <= 11'd2;
-        archReg2 <= 5'd0;
-        physReg2 <= 8'd0;
-        opcode2 <= 11'd3;
-        archReg3 <= 5'd0;
-        physReg3 <= 8'd0;
-        opcode3 <= 11'd4;
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
         @(posedge clk);
         // Insertion and Execution same time
         inserted <= 4'b1111;
-        executed <= 4'b1111;
-        executedIndex0 <= 7'd10;
-        executedIndex1 <= 7'd11;
-        executedIndex2 <= 7'd12;
-        executedIndex3 <= 7'd13;
+        robIdx0 <= 7'h1;
+        srcReg0_1 <= 8'h55;
+        srcReg0_2 <= 8'h66; 
+        robIdx1 <= 7'h2;
+        srcReg1_1 <= 8'h77;
+        srcReg1_2 <= 8'h88;
+        robIdx2 <= 7'h3;
+        srcReg2_1 <= 8'h55;
+        srcReg2_2 <= 8'h66;
+        robIdx3 <= 7'h4;
+        srcReg3_1 <= 8'h77;
+        srcReg3_2 <= 8'h88;
+        executed <= 1;
+        executedReg <= 8'h99; // No match
         @(posedge clk);
-        // Filling the ROB
-        executed <= 4'b0;
+        executedReg <= 8'h99;
+        @(posedge clk);
+        executedReg <= 8'h99;
+        @(posedge clk);
+        executedReg <= 8'h88;
+        @(posedge clk);
+        executedReg <= 8'h77;
+        @(posedge clk);
+        inserted <= 0;
+        executedReg <= 8'h55;
+        @(posedge clk);
+        executedReg <= 8'h66;
+        @(posedge clk);
+        executed <= 0;
+        @(posedge clk);
+        // Filling the iq
         inserted <= 4'b1111;
         @(posedge clk);
         inserted <= 4'b1111;
@@ -412,27 +390,20 @@ module iq_tb;
         @(posedge clk);
         @(posedge clk);
         // Escape from Full
-        executed <= 4'b1111;
-        executedIndex0 <= 7'd14;
-        executedIndex1 <= 7'd15;
-        executedIndex2 <= 7'd16;
-        executedIndex3 <= 7'd17;
+        executed <= 1;
+        executedReg <= 8'h88;
         @(posedge clk);
         // Enter full again
-        executed <= 4'b0;
         inserted <= 4'b1111;
-        archReg0 <= 5'd0;
-        physReg0 <= 8'd0;
-        opcode0 <= 11'd1;
-        archReg1 <= 5'd0;
-        physReg1 <= 8'd0;
-        opcode1 <= 11'd2;
-        archReg2 <= 5'd0;
-        physReg2 <= 8'd0;
-        opcode2 <= 11'd3;
-        archReg3 <= 5'd0;
-        physReg3 <= 8'd0;
-        opcode3 <= 11'd4;
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
         @(posedge clk);
         @(posedge clk);
         @(posedge clk);
