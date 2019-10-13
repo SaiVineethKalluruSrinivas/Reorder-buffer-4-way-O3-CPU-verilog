@@ -36,10 +36,10 @@ module rob(
     logic [6:0] tail_next;
     logic [6:0] sum_head;
     logic [6:0] sum_tail;
-    logic [27:0] inserted_0_reg;
-    logic [27:0] inserted_1_reg;
-    logic [27:0] inserted_2_reg;
-    logic [27:0] inserted_3_reg;
+    logic [26:0] inserted_0_reg;
+    logic [26:0] inserted_1_reg;
+    logic [26:0] inserted_2_reg;
+    logic [26:0] inserted_3_reg;
     logic executed_0_reg;
     logic executed_1_reg;
     logic executed_2_reg;
